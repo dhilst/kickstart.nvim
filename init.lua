@@ -190,6 +190,15 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+-- keymaps depending on the file type
+-- OCaml
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'ocaml',
+  callback = function(event)
+    vim.keymap.set('n', '<Leader>t', '<Cmd>Lspsaga hover_doc<return>', { buffer = event.buf })
+  end,
+})
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -228,6 +237,18 @@ vim.opt.rtp:prepend(lazypath)
 --
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
+  -- LSP Saga https://nvimdev.github.io/lspsaga/
+  {
+    'nvimdev/lspsaga.nvim',
+    config = function() end,
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter', -- optional
+      'nvim-tree/nvim-web-devicons', -- optional
+    },
+  },
+  -- OCaml
+  'ocaml/vim-ocaml',
+
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
 
@@ -345,6 +366,14 @@ require('lazy').setup({
       -- This opens a window that shows you all of the keymaps for the current
       -- Telescope picker. This is really useful to discover what Telescope can
       -- do as well as how to actually do it!
+
+      require('lspsaga').setup {
+        ui = {
+          -- Disables the annoying light bulb following the cursor
+          -- https://nvimdev.github.io/lspsaga/lightbulb/
+          code_action = '',
+        },
+      }
 
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
@@ -567,6 +596,7 @@ require('lazy').setup({
         -- clangd = {},
         -- gopls = {},
         pyright = {},
+        ocamllsp = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
