@@ -190,6 +190,15 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+-- keymaps depending on the file type
+-- OCaml
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'ocaml',
+  callback = function(event)
+    vim.keymap.set('n', '<Leader>t', '<Cmd>Lspsaga hover_doc<return>', { buffer = event.buf })
+  end,
+})
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -228,6 +237,33 @@ vim.opt.rtp:prepend(lazypath)
 --
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
+  -- LSP Saga https://nvimdev.github.io/lspsaga/
+  {
+    'nvimdev/lspsaga.nvim',
+    config = function() end,
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter', -- optional
+      'nvim-tree/nvim-web-devicons', -- optional
+    },
+  },
+  -- OCaml
+  'ocaml/vim-ocaml',
+  {
+    'jay-babu/mason-null-ls.nvim',
+    event = { 'BufReadPre', 'BufNewFile' },
+    dependencies = {
+      'williamboman/mason.nvim',
+      'nvimtools/none-ls.nvim',
+    },
+    config = function()
+      -- Note:
+      --     the default search path for `require` is ~/.config/nvim/lua
+      --     use a `.` as a path seperator
+      --     the suffix `.lua` is not needed
+      require 'config.mason-null-ls'
+    end,
+  },
+
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
 
@@ -346,6 +382,14 @@ require('lazy').setup({
       -- Telescope picker. This is really useful to discover what Telescope can
       -- do as well as how to actually do it!
 
+      require('lspsaga').setup {
+        ui = {
+          -- Disables the annoying light bulb following the cursor
+          -- https://nvimdev.github.io/lspsaga/lightbulb/
+          code_action = '',
+        },
+      }
+
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
       require('telescope').setup {
@@ -404,6 +448,17 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sn', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = '[S]earch [N]eovim files' })
+
+      -- Format
+      vim.keymap.set('n', '<space>f', function()
+        vim.lsp.buf.format {
+          async = true,
+          -- Only request null-ls for formatting
+          filter = function(client)
+            return client.name == 'null-ls'
+          end,
+        }
+      end, {})
     end,
   },
 
@@ -567,6 +622,7 @@ require('lazy').setup({
         -- clangd = {},
         -- gopls = {},
         pyright = {},
+        ocamllsp = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
